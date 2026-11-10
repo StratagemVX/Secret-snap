@@ -1,76 +1,33 @@
-# SecretSnap - Secure Ephemeral Messaging
+# SecretSnap — Ephemeral Secure In-Memory Message Vault
 
-A premium cybersecurity messaging platform for privacy-focused communication. Send encrypted, self-destructing messages with military-grade security.
+> Zero-knowledge client-side message encryption, one-time viewing links, particle animations, and ephemeral memory decay built with React 18, Vite, and Tailwind CSS.
 
-## Features
+---
 
-- 🔐 **AES-256 Encryption** - Military-grade encryption for your messages
-- ⏱ **Auto-Delete Timer** - Messages self-destruct after viewing or timer expiration
-- 🚫 **No Server Storage** - Complete privacy with client-side encryption
-- 💎 **Premium UI** - Dark mode with glass-morphism design and neon accents
-- 📱 **Mobile Responsive** - Swipe-based navigation for mobile devices
+## 1. Project Title
+**SecretSnap** (`Secret-snap`) — Ephemeral Secure In-Memory Message Vault.
 
-## Getting Started
+## 2. Project Overview
+SecretSnap is a privacy-first web application designed to transfer confidential information (credentials, sensitive notes, recovery keys) securely. It guarantees that secrets cannot be intercepted or read more than once by executing client-side encryption and burn-on-read destruction protocols.
 
-### Prerequisites
+## 3. Key Features
+- **Client-Side Encryption:** Payloads are encrypted in browser memory prior to transmission.
+- **Burn After Reading:** Messages automatically self-destruct once viewed by the recipient.
+- **Custom Visual Experience:** Built with dynamic particle backgrounds, step indicators, and high-contrast security themes.
+- **Zero-Storage Retention:** No unencrypted data is ever retained on persistent disks.
 
-- Node.js (v18 or higher)
-- npm or yarn
+## 4. Technology Stack
+- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons, Canvas Particles
+- **Cryptography:** Client-side AES-256-GCM / WebCrypto
 
-### Installation
-
-```sh
-# Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory
-cd secret-snap-away-main
-
-# Step 3: Install dependencies
+## 5. Installation Instructions
+```bash
+git clone https://github.com/StratagemVX/Secret-snap.git
+cd Secret-snap
 npm install
-
-# Step 4: Start the development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
-
-## Technologies
-
-This project is built with:
-
-- **Vite** - Fast build tool and dev server
-- **TypeScript** - Type-safe JavaScript
-- **React** - UI library
-- **shadcn-ui** - High-quality component library
-- **Tailwind CSS** - Utility-first CSS framework
-
-## Project Structure
-
-```
-src/
-├── components/      # React components
-│   ├── ui/         # shadcn-ui components
-│   ├── BrandHeader.tsx
-│   ├── EncryptedPanel.tsx
-│   ├── ParticlesBackground.tsx
-│   ├── ReceiverPanel.tsx
-│   ├── SecretSnap.tsx
-│   ├── SenderPanel.tsx
-│   └── StepIndicator.tsx
-├── pages/          # Page components
-├── utils/          # Utility functions
-└── hooks/          # Custom React hooks
-```
-
-## Build for Production
-
-```sh
-npm run build
-```
-
-The production build will be in the `dist` directory.
-
-## License
-
-Private - All rights reserved
+## 6. Author & Project Information
+- **Developer:** Chethan Kumar B S (`StratagemVX`)
+- **Domain:** Cybersecurity & Ephemeral Privacy Engineering
