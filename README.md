@@ -81,3 +81,24 @@ npm run dev
 - **GitHub:** [https://github.com/StratagemVX](https://github.com/StratagemVX)
 - **Portfolio:** [https://chethan-kumar-portfolio.vercel.app/](https://chethan-kumar-portfolio.vercel.app/)
 - **LinkedIn:** [https://linkedin.com/in/chethan-kumar-b-s-781a002bb](https://linkedin.com/in/chethan-kumar-b-s-781a002bb)
+
+## Verification and maintenance
+
+Keep this README consistent with implemented behavior, current dependencies, and deployment configuration.
+
+### Available package scripts
+
+- `npm run dev` — `vite`
+- `npm run build` — `vite build`
+- `npm run lint` — `eslint .`
+- `npm run preview` — `vite preview`
+
+These commands are declared in the package manifest; no execution result is implied by listing them.
+
+### Contribution and security notes
+
+- Update feature, architecture, and screenshot material when implementation changes.
+- Keep credentials, private keys, production data, and local environment files out of version control.
+- Use placeholder-only configuration examples and store real secrets in deployment-managed settings.
+- Include reproducible issue steps and expected/actual results.
+- Run the relevant build, lint, and test checks before merging.
