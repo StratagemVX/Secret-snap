@@ -1,33 +1,83 @@
 # SecretSnap — Ephemeral Secure In-Memory Message Vault
 
-> Zero-knowledge client-side message encryption, one-time viewing links, particle animations, and ephemeral memory decay built with React 18, Vite, and Tailwind CSS.
+> A zero-knowledge privacy platform engineered for sharing confidential credentials, temporary passwords, and sensitive notes through client-side encryption and burn-on-read destruction.
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg)](https://tailwindcss.com/)
 
 ---
 
-## 1. Project Title
-**SecretSnap** (`Secret-snap`) — Ephemeral Secure In-Memory Message Vault.
+## Executive Overview
 
-## 2. Project Overview
-SecretSnap is a privacy-first web application designed to transfer confidential information (credentials, sensitive notes, recovery keys) securely. It guarantees that secrets cannot be intercepted or read more than once by executing client-side encryption and burn-on-read destruction protocols.
+SecretSnap is a privacy-first web application designed to transfer confidential text strings (passwords, API secrets, private recovery keys) over public networks without leaving persistent digital footprints. The application executes cryptographic encryption directly in browser memory before generating a single-use access link. Once viewed by the authorized recipient, the encrypted payload self-destructs immediately.
 
-## 3. Key Features
-- **Client-Side Encryption:** Payloads are encrypted in browser memory prior to transmission.
-- **Burn After Reading:** Messages automatically self-destruct once viewed by the recipient.
-- **Custom Visual Experience:** Built with dynamic particle backgrounds, step indicators, and high-contrast security themes.
-- **Zero-Storage Retention:** No unencrypted data is ever retained on persistent disks.
+---
 
-## 4. Technology Stack
-- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons, Canvas Particles
-- **Cryptography:** Client-side AES-256-GCM / WebCrypto
+## Core Capabilities & Features
 
-## 5. Installation Instructions
+### Implemented Capabilities
+- **Browser-Side In-Memory Encryption:** Text payloads are transformed into encrypted strings before network dispatch; the server never receives plaintext.
+- **Burn-on-Read Self-Destruction:** Single-use retrieval tokens guarantee that payloads cannot be re-read once unlocked.
+- **Particle Visualization Canvas (`ParticlesBackground.tsx`):** Dynamic floating particle animations provide aesthetic security feedback.
+- **Guided Step Workflow (`StepIndicator.tsx`):** Intuitive 3-step creation, key generation, and link sharing workflow.
+- **Decryption Panel (`ReceiverPanel.tsx`):** Clean decryption viewer validating passphrase accuracy before rendering secrets.
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    Sender([Sender Browser]) -->|1. Plaintext + Passphrase| Enc[Client-Side AES Encryption]
+    Enc -->|2. Ciphertext Only| Server[(In-Memory Ephemeral Vault)]
+    Server -->|3. Single-Use Link| Recipient([Recipient Browser])
+    Recipient -->|4. Input Passphrase| Dec[Client-Side Decryption]
+    Dec -->|5. Render Secret| Burn[Payload Self-Destructs]
+```
+
+---
+
+## Directory Structure
+
+```text
+Secret-snap/
+├── src/
+│   ├── components/
+│   │   ├── BrandHeader.tsx          # Brand header and security badges
+│   │   ├── EncryptedPanel.tsx        # Encryption form and parameter inputs
+│   │   ├── ParticlesBackground.tsx  # Dynamic HTML5 canvas particle backdrop
+│   │   ├── ReceiverPanel.tsx         # Decryption verification and display
+│   │   ├── StepIndicator.tsx        # Guided 3-step execution indicator
+│   │   └── ui/                      # Modular UI component abstractions
+│   ├── App.tsx                      # Main application view container
+│   ├── main.tsx                     # React DOM root mounting
+│   └── index.css                    # Tailwind utility and theme styles
+├── package.json                     # Project manifest and build scripts
+└── README.md                        # Master repository technical documentation
+```
+
+---
+
+## Setup & Installation
+
 ```bash
+# Clone the repository
 git clone https://github.com/StratagemVX/Secret-snap.git
 cd Secret-snap
+
+# Install dependencies
 npm install
+
+# Start development server
 npm run dev
 ```
 
-## 6. Author & Project Information
-- **Developer:** Chethan Kumar B S (`StratagemVX`)
-- **Domain:** Cybersecurity & Ephemeral Privacy Engineering
+---
+
+## Contributor Attribution & Profile
+
+- **Lead Engineer:** Chethan Kumar B S (`StratagemVX`)
+- **GitHub:** [https://github.com/StratagemVX](https://github.com/StratagemVX)
+- **Portfolio:** [https://chethan-kumar-portfolio.vercel.app/](https://chethan-kumar-portfolio.vercel.app/)
+- **LinkedIn:** [https://linkedin.com/in/chethan-kumar-b-s-781a002bb](https://linkedin.com/in/chethan-kumar-b-s-781a002bb)
