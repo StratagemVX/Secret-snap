@@ -1,40 +1,44 @@
-# SecretSnap — Ephemeral Secure In-Memory Message Vault
+# SecretSnap — Client-Side Secret Sharing UI (Web Crypto AES-256-GCM)
 
-> A zero-knowledge privacy platform engineered for sharing confidential credentials, temporary passwords, and sensitive notes through client-side encryption and burn-on-read destruction.
+> A browser-only confidential note sharing demo built with React 18, TypeScript, Vite, and Tailwind CSS, featuring guided 3-step encryption/decryption UI and client-side TTL expiration.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC.svg)](https://tailwindcss.com/)
+[![WebCrypto](https://img.shields.io/badge/WebCrypto-AES--256--GCM-green.svg)](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
 
 ---
 
 ## Executive Overview
 
-SecretSnap is a privacy-first web application designed to transfer confidential text strings (passwords, API secrets, private recovery keys) over public networks without leaving persistent digital footprints. The application executes cryptographic encryption directly in browser memory before generating a single-use access link. Once viewed by the authorized recipient, the encrypted payload self-destructs immediately.
+**SecretSnap** is a front-end privacy application demonstrating client-side secret protection, TTL-based UI destruction, and decoy output on wrong-key decryption attempts. All state (`encryptedMessage`, passphrase input, and TTL countdown) stays inside React browser memory (`src/components/SecretSnap.tsx`)—there is no backend server database or cross-device storage in this repository.
+
+> **Branch & Security Status (`main` vs. Draft PR #2):**
+> - On `main`: `src/utils/encryption.ts` uses demo Base64 encoding (`mockEncrypt` / `mockDecrypt`) with a plaintext passphrase check.
+> - On open Draft PR #2 (`maintenance/repository-quality-improvements`): replaces mock encoding with Web Crypto **PBKDF2-SHA256** (100,000 iterations, 16-byte random salt) + **AES-256-GCM** (12-byte random IV, `v1.<salt>.<iv>.<ciphertext>` envelope), fixes timer cleanup leaks and ESLint/Tailwind errors, adds `vitest` unit tests (`src/utils/encryption.test.ts`), and adds `.github/workflows/quality.yml`.
 
 ---
 
-## Core Capabilities & Features
+## Core Capabilities & Architecture
 
-### Implemented Capabilities
-- **Browser-Side In-Memory Encryption:** Text payloads are transformed into encrypted strings before network dispatch; the server never receives plaintext.
-- **Burn-on-Read Self-Destruction:** Single-use retrieval tokens guarantee that payloads cannot be re-read once unlocked.
-- **Particle Visualization Canvas (`ParticlesBackground.tsx`):** Dynamic floating particle animations provide aesthetic security feedback.
-- **Guided Step Workflow (`StepIndicator.tsx`):** Intuitive 3-step creation, key generation, and link sharing workflow.
-- **Decryption Panel (`ReceiverPanel.tsx`):** Clean decryption viewer validating passphrase accuracy before rendering secrets.
+### Implemented UI & Cryptographic Features
+- **3-Step Guided Flow (`StepIndicator.tsx`):** Send/Encrypt -> Encrypted Payload & Shareable Preview Link -> Receive/Decrypt.
+- **Sender Panel (`SenderPanel.tsx`):** Message composer, random key generator (`generateSecretKey`), and TTL expiration selector.
+- **Encrypted Display & Countdown (`EncryptedPanel.tsx`):** Displays ciphertext envelope and countdown timer (`window.setTimeout` cleanup via `useRef`).
+- **Receiver Decryption Panel (`ReceiverPanel.tsx`):** Decrypts payload via passphrase and returns a realistic decoy string (`generateFakeDecryptedMessage`) when authentication fails instead of leaking whether a passphrase came close.
+- **Canvas Visual Backdrop (`ParticlesBackground.tsx`):** Interactive particle animation canvas.
 
----
-
-## System Architecture
-
+### Data Flow (Browser-Only)
 ```mermaid
 flowchart LR
-    Sender([Sender Browser]) -->|1. Plaintext + Passphrase| Enc[Client-Side AES Encryption]
-    Enc -->|2. Ciphertext Only| Server[(In-Memory Ephemeral Vault)]
-    Server -->|3. Single-Use Link| Recipient([Recipient Browser])
-    Recipient -->|4. Input Passphrase| Dec[Client-Side Decryption]
-    Dec -->|5. Render Secret| Burn[Payload Self-Destructs]
+    Sender[SenderPanel UI] -->|Message + Passphrase + TTL| Enc[encryption.ts - AES-256-GCM in PR #2]
+    Enc -->|Ciphertext in React State| View[EncryptedPanel + TTL Timer]
+    View -->|Passphrase Entry| Dec[ReceiverPanel + decryptMessage]
+    Dec -->|Valid Key| Plain[Render Plaintext + Self-Destruct Timer]
+    Dec -->|Wrong Key / Tampered| Decoy[Render Decoy String]
 ```
+
+*Note: `handleSendMessage` constructs a preview URL string (`/decrypt/...`) in React state for demonstration; persisting messages across browsers or users would require an external zero-knowledge backend store.*
 
 ---
 
@@ -42,63 +46,63 @@ flowchart LR
 
 ```text
 Secret-snap/
+├── .github/workflows/quality.yml   # npm ci --ignore-scripts, audit, typecheck, lint, test, build (PR #2)
 ├── src/
 │   ├── components/
-│   │   ├── BrandHeader.tsx          # Brand header and security badges
-│   │   ├── EncryptedPanel.tsx        # Encryption form and parameter inputs
-│   │   ├── ParticlesBackground.tsx  # Dynamic HTML5 canvas particle backdrop
-│   │   ├── ReceiverPanel.tsx         # Decryption verification and display
-│   │   ├── StepIndicator.tsx        # Guided 3-step execution indicator
-│   │   └── ui/                      # Modular UI component abstractions
-│   ├── App.tsx                      # Main application view container
-│   ├── main.tsx                     # React DOM root mounting
-│   └── index.css                    # Tailwind utility and theme styles
-├── package.json                     # Project manifest and build scripts
-└── README.md                        # Master repository technical documentation
+│   │   ├── BrandHeader.tsx         # App header & security branding
+│   │   ├── EncryptedPanel.tsx      # Ciphertext preview & expiration display
+│   │   ├── ParticlesBackground.tsx # HTML5 canvas particle animation
+│   │   ├── ReceiverPanel.tsx       # Passphrase decryption view
+│   │   ├── SecretSnap.tsx          # Main 3-step orchestrator & timer lifecycle
+│   │   ├── SenderPanel.tsx         # Message input, key generator, TTL selector
+│   │   ├── StepIndicator.tsx       # Step progress indicator
+│   │   └── ui/                     # shadcn/ui Radix primitives
+│   ├── utils/
+│   │   ├── encryption.ts           # Crypto utilities (Web Crypto AES-GCM in PR #2)
+│   │   └── encryption.test.ts      # Vitest crypto unit tests (PR #2)
+│   ├── App.tsx                     # Root application & routing
+│   └── main.tsx                    # React DOM entry point
+├── .env.example                    # Placeholder client config (`VITE_APP_TITLE=SecretSnap`)
+├── package.json                    # Dependencies and verification scripts
+├── vitest.config.ts                # Vitest runner configuration (PR #2)
+└── README.md                       # Repository documentation
 ```
 
 ---
 
-## Setup & Installation
+## Setup, Scripts & Verification
 
+### Local Development
 ```bash
-# Clone the repository
 git clone https://github.com/StratagemVX/Secret-snap.git
 cd Secret-snap
 
-# Install dependencies
-npm install
-
-# Start development server
+npm ci --ignore-scripts
+cp .env.example .env
 npm run dev
 ```
+
+### Environment Variables (`.env.example`)
+| Variable | Purpose |
+|---|---|
+| `VITE_APP_TITLE` | Optional Vite application title (`SecretSnap` default) |
+
+### Available Package Scripts (`package.json`)
+| Script | Command | Notes |
+|---|---|---|
+| `npm run dev` | `vite` | Local Vite dev server |
+| `npm run build` | `vite build` | Production bundle build |
+| `npm run typecheck` | `tsc --noEmit` | Added in PR #2 |
+| `npm run lint` | `eslint .` | ESLint static analysis |
+| `npm test` | `vitest run` | Added in PR #2 (`src/utils/encryption.test.ts`) |
+| `npm run preview` | `vite preview` | Preview built `dist/` bundle |
 
 ---
 
 ## Contributor Attribution & Profile
 
 - **Lead Engineer:** Chethan Kumar B S (`StratagemVX`)
+- **Related Prototype:** [StratagemVX/secret-snap-away](https://github.com/StratagemVX/secret-snap-away) (private preliminary 3-panel UI prototype)
 - **GitHub:** [https://github.com/StratagemVX](https://github.com/StratagemVX)
 - **Portfolio:** [https://chethan-kumar-portfolio.vercel.app/](https://chethan-kumar-portfolio.vercel.app/)
 - **LinkedIn:** [https://linkedin.com/in/chethan-kumar-b-s-781a002bb](https://linkedin.com/in/chethan-kumar-b-s-781a002bb)
-
-## Verification and maintenance
-
-Keep this README consistent with implemented behavior, current dependencies, and deployment configuration.
-
-### Available package scripts
-
-- `npm run dev` — `vite`
-- `npm run build` — `vite build`
-- `npm run lint` — `eslint .`
-- `npm run preview` — `vite preview`
-
-These commands are declared in the package manifest; no execution result is implied by listing them.
-
-### Contribution and security notes
-
-- Update feature, architecture, and screenshot material when implementation changes.
-- Keep credentials, private keys, production data, and local environment files out of version control.
-- Use placeholder-only configuration examples and store real secrets in deployment-managed settings.
-- Include reproducible issue steps and expected/actual results.
-- Run the relevant build, lint, and test checks before merging.
