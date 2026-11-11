@@ -1,11 +1,11 @@
-﻿import React, { useState, useCallback, useRef } from 'react';
+﻿import React, { useState, useCallback, useRef, useEffect } from 'react';
 import SenderPanel from './SenderPanel';
 import EncryptedPanel from './EncryptedPanel';
 import ReceiverPanel from './ReceiverPanel';
 import BrandHeader from './BrandHeader';
 import StepIndicator from './StepIndicator';
 import ParticlesBackground from './ParticlesBackground';
-import { mockEncrypt, mockDecrypt } from '@/utils/encryption';
+import { encryptMessage } from '@/utils/encryption';
 import { useToast } from '@/components/ui/use-toast';
 
 type Step = 1 | 2 | 3;
@@ -15,26 +15,44 @@ const SecretSnap: React.FC = () => {
   const [encryptedMessage, setEncryptedMessage] = useState<string>('');
   const [secretKey, setSecretKey] = useState<string>('');
   const [ttl, setTtl] = useState<number>(30);
-  const [decryptedMessage, setDecryptedMessage] = useState<string>('');
   const [secureLink, setSecureLink] = useState<string>('');
   const { toast } = useToast();
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
+  const selfDestructTimerRef = useRef<number | null>(null);
 
-  const handleSendMessage = (message: string, messageTtl: number, key: string) => {
-    const encrypted = mockEncrypt(message, key);
+  const clearSelfDestructTimer = useCallback(() => {
+    if (selfDestructTimerRef.current !== null) {
+      window.clearTimeout(selfDestructTimerRef.current);
+      selfDestructTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearSelfDestructTimer, [clearSelfDestructTimer]);
+
+  const resetState = useCallback(() => {
+    clearSelfDestructTimer();
+    setEncryptedMessage('');
+    setSecretKey('');
+    setSecureLink('');
+    setCurrentStep(1);
+  }, [clearSelfDestructTimer]);
+
+  const handleSendMessage = async (message: string, messageTtl: number, key: string) => {
+    clearSelfDestructTimer();
+    const encrypted = await encryptMessage(message, key);
     setEncryptedMessage(encrypted);
     setSecretKey(key);
     setTtl(messageTtl);
-    const link = `${window.location.origin}/decrypt/${btoa(encrypted).slice(0, 20)}`;
+    const link = `${window.location.origin}/decrypt/${encodeURIComponent(encrypted.slice(-20))}`;
     setSecureLink(link);
     setCurrentStep(2);
-    toast({ description: "Message encrypted successfully!" });
+    toast({ description: "Message encrypted with AES-256-GCM!" });
   };
 
   const handleGenerateLink = () => {
     if (encryptedMessage && secretKey) {
-      const link = `${window.location.origin}/decrypt/${btoa(encryptedMessage).slice(0, 20)}`;
+      const link = `${window.location.origin}/decrypt/${encodeURIComponent(encryptedMessage.slice(-20))}`;
       setSecureLink(link);
       navigator.clipboard.writeText(link).then(() => {
         toast({ description: "Secure link copied to clipboard!" });
@@ -42,27 +60,16 @@ const SecretSnap: React.FC = () => {
     }
   };
 
-  const handleDecrypt = useCallback((attemptedKey: string, isCorrect: boolean) => {
-    const decrypted = mockDecrypt(encryptedMessage, attemptedKey, secretKey);
-    setDecryptedMessage(decrypted);
-
+  const handleDecrypt = useCallback((_decryptedMessage: string, isCorrect: boolean) => {
     if (isCorrect) {
       setCurrentStep(3);
       toast({ description: "Message decrypted successfully!" });
-      const selfDestructTimer = setTimeout(() => resetState(), ttl * 1000);
-      return () => clearTimeout(selfDestructTimer);
+      clearSelfDestructTimer();
+      selfDestructTimerRef.current = window.setTimeout(() => resetState(), ttl * 1000);
     } else {
       toast({ description: "Message decrypted." });
     }
-  }, [encryptedMessage, secretKey, ttl, toast]);
-
-  const resetState = () => {
-    setEncryptedMessage('');
-    setSecretKey('');
-    setDecryptedMessage('');
-    setSecureLink('');
-    setCurrentStep(1);
-  };
+  }, [ttl, toast, clearSelfDestructTimer, resetState]);
 
   const handleExpire = () => {
     resetState();
@@ -141,7 +148,6 @@ const SecretSnap: React.FC = () => {
               <div className="slide-in h-full">
                 <ReceiverPanel
                   encryptedMessage={encryptedMessage}
-                  correctKey={secretKey}
                   ttl={ttl}
                   onDecrypt={handleDecrypt}
                   onBack={handlePrevStep}

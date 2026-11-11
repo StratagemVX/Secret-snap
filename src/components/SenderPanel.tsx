@@ -64,29 +64,33 @@ const SenderPanel: React.FC<SenderPanelProps> = ({ onSendMessage, onNext }) => {
   const offset = circumference - (progress / 100) * circumference;
 
   // Handle radial drag
-  const handleTimerInteraction = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!timerRef.current) return;
-    const rect = timerRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    
-    let clientX, clientY;
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    const angle = Math.atan2(clientY - centerY, clientX - centerX);
-    let normalizedAngle = (angle + Math.PI / 2) / (2 * Math.PI);
-    if (normalizedAngle < 0) normalizedAngle += 1;
-    if (normalizedAngle > 1) normalizedAngle -= 1;
-    
-    const newTtl = Math.round((normalizedAngle * 295 + 5) / 5) * 5;
-    setTtl(Math.max(5, Math.min(300, newTtl)));
-  }, []);
+  const handleTimerInteraction = useCallback(
+    (e: { clientX: number; clientY: number } | React.MouseEvent | React.TouchEvent) => {
+      if (!timerRef.current) return;
+      const rect = timerRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      let clientX: number;
+      let clientY: number;
+      if ('touches' in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      const angle = Math.atan2(clientY - centerY, clientX - centerX);
+      let normalizedAngle = (angle + Math.PI / 2) / (2 * Math.PI);
+      if (normalizedAngle < 0) normalizedAngle += 1;
+      if (normalizedAngle > 1) normalizedAngle -= 1;
+
+      const newTtl = Math.round((normalizedAngle * 295 + 5) / 5) * 5;
+      setTtl(Math.max(5, Math.min(300, newTtl)));
+    },
+    []
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -95,7 +99,7 @@ const SenderPanel: React.FC<SenderPanelProps> = ({ onSendMessage, onNext }) => {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging && timerRef.current) {
-      handleTimerInteraction(e as any);
+      handleTimerInteraction(e);
     }
   }, [isDragging, handleTimerInteraction]);
 
