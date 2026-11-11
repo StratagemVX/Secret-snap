@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Unlock, Timer, ArrowLeft, Eye, EyeOff, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
+import { decryptMessage } from '@/utils/encryption';
+
 interface ReceiverPanelProps {
   encryptedMessage: string;
-  correctKey: string;
   ttl: number;
   onDecrypt: (decryptedMessage: string, success: boolean) => void;
   onBack?: () => void;
@@ -13,7 +14,6 @@ interface ReceiverPanelProps {
 
 const ReceiverPanel: React.FC<ReceiverPanelProps> = ({
   encryptedMessage,
-  correctKey,
   ttl,
   onDecrypt,
   onBack
@@ -49,28 +49,16 @@ const ReceiverPanel: React.FC<ReceiverPanelProps> = ({
     }
 
     setIsDecrypting(true);
-    
-    // Simulate decryption delay for effect
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const success = secretKey === correctKey;
-    onDecrypt(secretKey, success);
 
-    if (success) {
-      const { fromBase64 } = await import('@/utils/encryption');
-      try {
-        setDecryptedMessage(fromBase64(encryptedMessage));
-      } catch (e) {
-        setDecryptedMessage("Error decrypting message.");
-      }
-    } else {
-      const { generateFakeDecryptedMessage } = await import('@/utils/encryption');
-      setDecryptedMessage(generateFakeDecryptedMessage());
+    try {
+      const { decrypted, authentic } = await decryptMessage(encryptedMessage, secretKey);
+      setDecryptedMessage(decrypted);
+      onDecrypt(decrypted, authentic);
+      setMessageDecrypted(true);
+      setTimeLeft(ttl);
+    } finally {
+      setIsDecrypting(false);
     }
-
-    setMessageDecrypted(true);
-    setTimeLeft(ttl);
-    setIsDecrypting(false);
   };
 
   const formatTime = (seconds: number) => {
